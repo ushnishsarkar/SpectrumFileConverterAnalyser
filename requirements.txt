@@ -1,0 +1,547 @@
+# requirements.txt
+# Core dependencies for Spectrum Converter Pro
+# Install with: pip install -r requirements.txt
+
+# GUI Framework
+tkinter>=8.6  # Usually included with Python
+
+# Optional dependencies for enhanced functionality
+matplotlib>=3.5.0  # For plotting features
+numpy>=1.21.0     # Required by matplotlib
+
+# Development dependencies (install with: pip install -r requirements-dev.txt)
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+# black>=22.0.0
+# flake8>=5.0.0
+# mypy>=0.991
+
+# setup.py
+"""
+Setup script for Spectrum Converter Pro
+"""
+
+from setuptools import setup, find_packages
+from pathlib import Path
+
+# Read the long description from README
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
+
+setup(
+    name="spectrum-converter-pro",
+    version="2.0.0",
+    author="Spectrum Analysis Team",
+    author_email="support@spectrumanalysis.org",
+    description="Comprehensive tool for gamma-ray spectrum analysis and conversion",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/spectrum-analysis/spectrum-converter-pro",
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering :: Physics",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+    ],
+    python_requires=">=3.8",
+    install_requires=[
+        # Core dependencies only - matplotlib is optional
+    ],
+    extras_require={
+        "plotting": ["matplotlib>=3.5.0", "numpy>=1.21.0"],
+        "dev": [
+            "pytest>=7.0.0",
+            "pytest-cov>=4.0.0", 
+            "black>=22.0.0",
+            "flake8>=5.0.0",
+            "mypy>=0.991",
+        ],
+    },
+    entry_points={
+        "console_scripts": [
+            "spectrum-converter=spectrum_converter.main:main",
+            "spectrum-cli=spectrum_converter.cli:main",
+        ],
+        "gui_scripts": [
+            "spectrum-converter-gui=spectrum_converter.main:main",
+        ],
+    },
+    include_package_data=True,
+    package_data={
+        "spectrum_converter": ["config/*.json", "examples/*"],
+    },
+)
+
+# pyproject.toml
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spectrum-converter-pro"
+version = "2.0.0"
+description = "Comprehensive tool for gamma-ray spectrum analysis and conversion"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Spectrum Analysis Team", email = "support@spectrumanalysis.org"}
+]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.optional-dependencies]
+plotting = ["matplotlib>=3.5.0", "numpy>=1.21.0"]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=22.0.0", 
+    "flake8>=5.0.0",
+    "mypy>=0.991",
+]
+
+[project.scripts]
+spectrum-converter = "spectrum_converter.main:main"
+spectrum-cli = "spectrum_converter.cli:main"
+
+[project.gui-scripts]
+spectrum-converter-gui = "spectrum_converter.main:main"
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+# Makefile
+# Makefile for Spectrum Converter Pro development
+
+.PHONY: help install install-dev test lint format clean build docs
+
+help:  ## Show this help message
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+install:  ## Install the package
+	pip install -e .
+
+install-dev:  ## Install development dependencies
+	pip install -e ".[dev,plotting]"
+
+install-plotting:  ## Install with plotting support
+	pip install -e ".[plotting]"
+
+test:  ## Run tests
+	pytest tests/ -v --cov=spectrum_converter --cov-report=html --cov-report=term
+
+test-fast:  ## Run tests without coverage
+	pytest tests/ -v
+
+lint:  ## Run linting
+	flake8 src/spectrum_converter tests/
+	mypy src/spectrum_converter
+
+format:  ## Format code
+	black src/spectrum_converter tests/
+	
+format-check:  ## Check code formatting
+	black --check src/spectrum_converter tests/
+
+clean:  ## Clean build artifacts
+	rm -rf build/
+	rm -rf dist/
+	rm -rf *.egg-info/
+	rm -rf htmlcov/
+	find . -type d -name __pycache__ -delete
+	find . -type f -name "*.pyc" -delete
+
+build:  ## Build distribution packages
+	python -m build
+
+docs:  ## Generate documentation
+	@echo "Documentation generation not yet implemented"
+
+run-gui:  ## Run the GUI application
+	python -m spectrum_converter.main
+
+run-cli:  ## Run CLI help
+	python -m spectrum_converter.cli --help
+
+# Docker support
+docker-build:  ## Build Docker image
+	docker build -t spectrum-converter-pro .
+
+docker-run:  ## Run in Docker container
+	docker run -it --rm -v $(PWD)/data:/app/data spectrum-converter-pro
+
+# .gitignore
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+#   For a library or package, you might want to ignore these files since the code is
+#   intended to run in multiple environments; otherwise, check them in:
+# .python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# poetry
+#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+#poetry.lock
+
+# pdm
+#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+#pdm.lock
+#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
+#   in version control.
+#   https://pdm.fming.dev/#use-with-ide
+.pdm.toml
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Application specific
+spectrum_converter_config.json
+spectrum_file_history.json
+*.spe
+*.cnf
+*.z1d
+temp_*
+output/
+data/
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# README.md
+# Spectrum Converter Pro
+
+A comprehensive tool for gamma-ray spectrum analysis, conversion, and visualization.
+
+## Features
+
+- **Multi-format Support**: Read and convert SPE, CNF, TXT, and Z1D files
+- **Advanced Analysis**: Peak detection, background estimation, statistical analysis
+- **High-quality Plotting**: Energy-calibrated plots with peak annotations
+- **Batch Processing**: Convert multiple files with parallel processing
+- **Modern GUI**: Clean, intuitive interface with tabbed workflow
+- **Command Line Interface**: Automation-friendly CLI for scripting
+- **Extensible Architecture**: Plugin system for custom formats and analysis
+
+## Installation
+
+### Basic Installation
+
+```bash
+pip install spectrum-converter-pro
+```
+
+### With Plotting Support
+
+```bash
+pip install spectrum-converter-pro[plotting]
+```
+
+### Development Installation
+
+```bash
+git clone https://github.com/spectrum-analysis/spectrum-converter-pro.git
+cd spectrum-converter-pro
+pip install -e ".[dev,plotting]"
+```
+
+## Quick Start
+
+### GUI Application
+
+```bash
+spectrum-converter-gui
+```
+
+### Command Line
+
+```bash
+# Convert single file
+spectrum-cli convert input.spe --format txt_full
+
+# Batch conversion
+spectrum-cli batch /path/to/spectra --format z1d --output /path/to/output
+
+# Analysis
+spectrum-cli analyze input.spe --peaks --export report.txt
+```
+
+### Python API
+
+```python
+from spectrum_converter import SpectrumFileReader, ConversionEngine, SpectrumAnalyzer
+
+# Read spectrum
+reader = SpectrumFileReader()
+spectrum = reader.read_file("example.spe")
+
+# Convert format
+engine = ConversionEngine()
+job = engine.create_job("example.spe", "txt_full")
+result = engine.convert_single(job)
+
+# Analyze spectrum
+analyzer = SpectrumAnalyzer()
+analysis = analyzer.analyze(spectrum)
+print(f"Found {len(analysis.peaks)} peaks")
+```
+
+## Supported Formats
+
+### Input Formats
+- **SPE**: Gamma spectroscopy standard format
+- **CNF**: Canberra format (requires cnf2txt.exe)
+
+### Output Formats
+- **TXT Full**: Text with complete metadata and statistics
+- **TXT Simple**: Simple count list
+- **Z1D Binary**: Binary format for analysis software
+
+## Architecture
+
+The application follows modern software engineering principles:
+
+- **Modular Design**: Separate engines for reading, conversion, analysis, and plotting
+- **Type Safety**: Comprehensive type hints and validation
+- **Error Handling**: Specific exception types with graceful degradation
+- **Testing**: Full test suite with coverage reporting
+- **Configuration**: Externalized settings with persistence
+- **Security**: Input validation and path sanitization
+
+## Development
+
+### Setup Development Environment
+
+```bash
+make install-dev
+```
+
+### Run Tests
+
+```bash
+make test
+```
+
+### Code Formatting
+
+```bash
+make format
+```
+
+### Linting
+
+```bash
+make lint
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Add tests for new functionality
+4. Ensure all tests pass
+5. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Support
+
+- Documentation: https://spectrum-converter-pro.readthedocs.io
+- Issues: https://github.com/spectrum-analysis/spectrum-converter-pro/issues
+- Discussions: https://github.com/spectrum-analysis/spectrum-converter-pro/discussions
+
+## Changelog
+
+### Version 2.0.0
+- Complete architectural rewrite
+- Modular, testable codebase
+- Enhanced security and error handling
+- Improved performance with parallel processing
+- Modern GUI with better UX
+- Comprehensive test suite
+- Plugin architecture for extensibility
